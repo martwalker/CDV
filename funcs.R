@@ -26,7 +26,7 @@ funcs <- list(
     mu <- par$mort*gamma/(1-par$mort)
     
     #  contact matrix
-    beta <- par$R0mat*gamma
+    beta <- par$R0mat*(gamma+mu)
     
     # initialise storage matrices
     S_series <- I_series <- R_series <- N_series <- matrix(0, nrow = par$T, ncol = par$n_patches)
