@@ -39,8 +39,7 @@ plot_recovered <- ggplot(out$R, aes(x = time, y = mean, color = patch)) +
 plot_pop <- ggplot(out$N, aes(x = time, y = mean, color = patch)) + 
   # geom_ribbon(aes(x=time, ymin=lwr, ymax=upr, fill=patch)) +
   geom_line() + 
-  labs(y = "Population size") +
-  scale_y_continuous(limits=c(0, max(states$N0)))
+  labs(y = "Population size")
 
 grid.arrange(plot_susceptible, plot_infected,
              plot_recovered, plot_pop, ncol = 2)
