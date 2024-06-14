@@ -13,12 +13,14 @@ funcs <- list(
     S <- E <- I<- R <- N <- vector("integer", length=par$n_patches)
     
     for (i in 1:par$n_patches) {
-      S[i] <- states$N0[i] - states$I0[i]- states$E0[i]
-      E[i] <- states$E0[i]
+      S[i] <- states$N0[i] - states$E0[i]
+      E[i] <- states$E0[i] - states$I0[i]
       I[i] <- states$I0[i]
       R[i] <- 0
       N[i] <- S[i]+E[i]+I[i]+R[i]
     }
+    
+    N_series[t, ] <- S + E + I + R
     
     # recovery rate
     gamma <- 1/par$dur_infectious
@@ -44,9 +46,9 @@ funcs <- list(
       E_series[t, ] <- E
       I_series[t, ] <- I
       R_series[t, ] <- R
-      N_series[t, ] <- S+I+R
+      N_series[t, ] <- S+E+I+R
       
-      new_exposed <- new_endogenous_infection <-   new_exogenous_infection <- new_loss <- new_recovered <- new_dead <- rep(0, par$n_patches)
+      new_exposed <- new_infection <- new_endogenous_infection <-   new_exogenous_infection <- new_loss <- new_recovered <- new_dead <- rep(0, par$n_patches)
       
       for (patch in 1:par$n_patches) {
         
@@ -57,11 +59,7 @@ funcs <- list(
         
         if (N[patch]>0) {
           
-          #exposure event
-          p_exposure <- 1 - exp(-(
-            (beta[patch, patch] * I[patch] / N[patch]) +
-              sum(beta[patch, -patch] * I[-patch] / N[-patch], na.rm = T)))
-          
+        
           
           # any infection event
           p_infection <- 1 - exp(-(
@@ -118,11 +116,6 @@ funcs <- list(
           new_infection[patch] <- new_endogenous_infection[patch] <- new_exogenous_infection[patch] <- 0
         }
         
-        if (p_exposure > 0) {
-          new_exposed[patch] <- rbinom(1, S[patch], p_exposure)
-        } else {
-          new_infection[patch] <- 0
-        }
         
         if (p_loss>0) {
           # new loss (recovery or death)
@@ -140,8 +133,8 @@ funcs <- list(
       #######################
       ## updates states
       #######################
-      S <- S - new_exposed
-      E <- E + new_exposed - new_infection 
+      S <- S - new_infection
+      E <- E + new_infection - new_endogenous_infection - new_exogenous_infection 
       I <- I + new_endogenous_infection + new_exogenous_infection - new_recovered - new_dead
       R <- R + new_recovered
       N <- S + E + I + R
