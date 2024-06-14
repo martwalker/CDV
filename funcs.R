@@ -20,8 +20,6 @@ funcs <- list(
       N[i] <- S[i]+E[i]+I[i]+R[i]
     }
     
-    N_series[t, ] <- S + E + I + R
-    
     # recovery rate
     gamma <- 1/par$dur_infectious
     
@@ -48,7 +46,7 @@ funcs <- list(
       R_series[t, ] <- R
       N_series[t, ] <- S+E+I+R
       
-      new_exposed <- new_infection <- new_endogenous_infection <-   new_exogenous_infection <- new_loss <- new_recovered <- new_dead <- rep(0, par$n_patches)
+      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- new_progression <- new_loss <- new_recovered <- new_dead <- rep(0, par$n_patches)
       
       for (patch in 1:par$n_patches) {
         
@@ -58,8 +56,6 @@ funcs <- list(
         #######################
         
         if (N[patch]>0) {
-          
-        
           
           # any infection event
           p_infection <- 1 - exp(-(
@@ -77,8 +73,12 @@ funcs <- list(
             (sum(beta[patch,-patch]*I[-patch] / N[-patch])) 
           ))
           
-          # any loss event (recovery or death)
+          # progression from exposed to infectious
+          p_progression <- 1 - exp(-(
+            sigma
+          ))
           
+          # any loss event (recovery or death)
           p_loss <- 1 - exp(-(
             gamma +                                            # recovery 
               mu                                               # death
@@ -97,7 +97,7 @@ funcs <- list(
           
         } else {
           
-          p_exposure <- p_infection <- p_endogenous_infection <- p_exogenous_infection <-  p_loss <- p_recovery <-  p_death <- 0
+          p_infection <- p_progreesion <- p_endogenous_infection <- p_exogenous_infection <-  p_loss <- p_recovery <-  p_death <- 0
           
         }
         
@@ -116,6 +116,9 @@ funcs <- list(
           new_infection[patch] <- new_endogenous_infection[patch] <- new_exogenous_infection[patch] <- 0
         }
         
+        if (p_progression) {
+          new_progression[patch] <- rbinom(1, E[patch], p_progression)
+        }
         
         if (p_loss>0) {
           # new loss (recovery or death)
@@ -134,8 +137,8 @@ funcs <- list(
       ## updates states
       #######################
       S <- S - new_infection
-      E <- E + new_infection - new_endogenous_infection - new_exogenous_infection 
-      I <- I + new_endogenous_infection + new_exogenous_infection - new_recovered - new_dead
+      E <- E + new_infection - new_progression
+      I <- I + new_progression - new_recovered - new_dead
       R <- R + new_recovered
       N <- S + E + I + R
       
