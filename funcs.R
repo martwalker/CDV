@@ -14,8 +14,8 @@ funcs <- list(
     
     for (i in 1:par$n_patches) {
       S[i] <- states$N0[i] - states$E0[i]
-      E[i] <- states$E0[i] - states$I0[i]
-      I[i] <- states$I0[i]
+      E[i] <- states$E0[i]
+      I[i] <- 0
       R[i] <- 0
       N[i] <- S[i]+E[i]+I[i]+R[i]
     }

@@ -19,12 +19,19 @@ par$R0mat <- matrix(c( par$R0intra, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
                     ncol=par$n_patches,byrow=T)
 
 ######################################
-## data
+## data from Gorden et al. 2015
 ####################################
+df <- read.csv("data.csv")
+
+#####################################
+## mortality rates
+####################################
+n0 <- df$total[df$time==0]
+n1 <- df$total[df$time==183]
+n2 <- df$total[df$time==366]
 
 #####################################
 ## states
 ####################################
-states = list(N0=  c(2, 6, 4, 1, 10, 5, 3), 
-              I0 = c(0, 0, 0, 0, 0,  0, 0), 
-              E0= c(0, 0, 0, 0, 1,  0, 0))
+states = list(N0 = df$total[df$time==0], 
+              E0 = c(0, 0, 0, 0, 1,  0, 0))
