@@ -32,18 +32,20 @@ plot_results <- function(out) {
     geom_line() +
     labs(y = "Recovered")
   
-  plot_vaccinated <- ggplot(out$V, aes(x = time, y = mean, color = patch)) +
-    geom_line() +
-    labs(y = "Vaccinated")
-  
   plot_population <- ggplot(out$N, aes(x = time, y = mean, color = patch)) +
     geom_line() +
     labs(y = "Population")
   
+  plot_extinction <- ggplot(out$Ex, aes(x = time, y = mean, color = patch)) +
+    geom_line() +
+    labs(y = "Probability extinction")
+  
+
+  
   # Arrange plots in a grid
   grid.arrange(
     plot_susceptible, plot_exposed, plot_infected,
-    plot_recovered, plot_vaccinated, plot_population,
+    plot_recovered, plot_population, plot_extinction,
     ncol = 2
   )
 }
@@ -52,3 +54,4 @@ plot_results <- function(out) {
 out <- funcs$runSEIRV(repeats = 100, states = states, par = par)
 
 plot_results(out)
+

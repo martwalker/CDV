@@ -11,15 +11,16 @@ funcs <- list(
     #######################
     # initialise and populate compartments
     #######################
-    S <- E <- I <- R <- V <- N <- vector("integer", length=par$n_patches)
+    S <- E <- I <- R <- V <- N <- Ex <- vector("integer", length=par$n_patches)
     
     for (i in 1:par$n_patches) {
-      S[i] <- states$N0[i] - states$E0[i] - states$V0[i]
-      E[i] <- states$E0[i] - states$I0[i]
-      I[i] <- states$I0[i]
+      S[i] <- (states$N0[i] - states$E0[i])*(1-par$vacc[i])
+      E[i] <- states$E0[i]
+      I[i] <- 0
       R[i] <- 0
-      V[i] <- states$V0[i]
+      V[i] <- (states$N0[i] - states$E0[i])*par$vacc[i]
       N[i] <- S[i] + E[i] + I[i] + R[i] + V[i]
+      Ex[i] <- N[i]==0
     }
     
     # recovery rate
@@ -35,12 +36,11 @@ funcs <- list(
     beta <- par$R0mat*(gamma+mu)
     
     # rate of losing immunity
-    delta <- 1/547  # immunity lasts for 18 months
-    
+    delta <- 1/par$dur_immun
     
     # initialise storage matrices 
-    
-    S_series <- E_series <- I_series <- R_series <- V_series <- N_series <- matrix(0, nrow = par$T, ncol = par$n_patches)    
+    S_series <- E_series <- I_series <-
+      R_series <- V_series <- N_series <- Ex_series <- matrix(0, nrow = par$T, ncol = par$n_patches)    
     
     #######################
     # main time loop
@@ -52,8 +52,11 @@ funcs <- list(
       R_series[t, ] <- R
       V_series[t, ] <- V
       N_series[t, ] <- S + E + I + R + V
+      Ex_series[t, ] <- Ex
       
-      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- new_progression <- new_loss <- new_recovered <- new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
+      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- 
+        new_progression <- new_loss <- new_recovered <-
+          new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
       
       for (patch in 1:par$n_patches) {
         
@@ -99,13 +102,10 @@ funcs <- list(
             mu
           ))
           
-          # vaccination event 
-          
-          p_vaccination <- 1 - exp(-par$vacc_rate)
-          
           # losing immunity event
-          
-          p_lost_immunity <- 1 - exp(-delta)
+          p_lost_immunity <- 1 - exp(-(
+            delta
+          ))
           
         } else {
           
@@ -144,12 +144,6 @@ funcs <- list(
           new_loss[patch] <- new_recovered[patch] <- new_dead[patch] <- 0
         }
         
-        if (all(p_vaccination > 0)) {
-          new_vaccinated[patch] <- rbinom(1, S[patch], p_vaccination)
-        } else {
-          new_vaccinated[patch] <- 0
-        }
-        
         if (p_lost_immunity > 0) {
           new_lost_immunity[patch] <- rbinom(1,V[patch], p_lost_immunity)
         } else {
@@ -168,7 +162,7 @@ funcs <- list(
       R <- R + new_recovered
       V <- V + new_vaccinated - new_lost_immunity
       N <- S + E + I + R + V
-      #N <- sum (S,E,I,R,V,na.rm=TRUE)
+      Ex <- N==0
     }
     
     #######################
@@ -176,7 +170,7 @@ funcs <- list(
     #######################
     
     
-    list(S=S_series,E=E_series, I=I_series, R=R_series, V=V_series, N=N_series)
+    list(S=S_series,E=E_series, I=I_series, R=R_series, V=V_series, N=N_series, Ex=Ex_series)
     
   }, 
   
@@ -190,6 +184,8 @@ funcs <- list(
     R <- as.data.frame(cbind(do.call(rbind, multi["R", 1:repeats]), time = seq(1, par$T)))
     V <- as.data.frame(cbind(do.call(rbind, multi["V", 1:repeats]), time = seq(1, par$T)))
     N <- as.data.frame(cbind(do.call(rbind, multi["N", 1:repeats]), time = seq(1, par$T)))
+    Ex <- as.data.frame(cbind(do.call(rbind, multi["Ex", 1:repeats]), time = seq(1, par$T)))
+    
     
     S_df <- as.data.frame(S) %>% pivot_longer(-time, names_to = "patch", values_to = "S")
     E_df <- as.data.frame(E) %>% pivot_longer(-time, names_to = "patch", values_to = "E")
@@ -197,6 +193,8 @@ funcs <- list(
     R_df <- as.data.frame(R) %>% pivot_longer(-time, names_to = "patch", values_to = "R")
     V_df <- as.data.frame(V) %>% pivot_longer(-time, names_to = "patch", values_to = "V")
     N_df <- as.data.frame(N) %>% pivot_longer(-time, names_to = "patch", values_to = "N")
+    Ex_df <- as.data.frame(Ex) %>% pivot_longer(-time, names_to = "patch", values_to = "Ex")
+    
     
     S_out <- group_by(S_df, patch, time) %>% summarise(mean = mean(S), lwr = quantile(S, probs = 0.025, na.rm=TRUE), upr = quantile(S, probs = 0.975, na.rm=TRUE))
     E_out <- group_by(E_df, patch, time) %>% summarise(mean = mean(E), lwr = quantile(E, probs = 0.025, na.rm=TRUE), upr = quantile(E, probs = 0.975, na.rm=TRUE))
@@ -204,7 +202,9 @@ funcs <- list(
     R_out <- group_by(R_df, patch, time) %>% summarise(mean = mean(R), lwr = quantile(R, probs = 0.025, na.rm=TRUE), upr = quantile(R, probs = 0.975, na.rm=TRUE))
     V_out <- group_by(V_df, patch, time) %>% summarise(mean = mean(V), lwr = quantile(V, probs = 0.025, na.rm=TRUE), upr = quantile(V, probs = 0.975, na.rm=TRUE))
     N_out <- group_by(N_df, patch, time) %>% summarise(mean = mean(N), lwr = quantile(N, probs = 0.025, na.rm=TRUE), upr = quantile(N, probs = 0.975, na.rm=TRUE))
+    Ex_out <- group_by(Ex_df, patch, time) %>% summarise(mean = mean(Ex), lwr = quantile(Ex, probs = 0.025, na.rm=TRUE), upr = quantile(Ex, probs = 0.975, na.rm=TRUE))
     
-    return(list(S = S_out, E = E_out, I = I_out,R = R_out, V = V_out, N = N_out))
+    
+    return(list(S = S_out, E = E_out, I = I_out,R = R_out, V = V_out, N = N_out, Ex=Ex_out))
   }
 )
