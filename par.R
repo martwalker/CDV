@@ -2,19 +2,19 @@
 ## parameters
 ####################################
 par <- list(n_patches = 7,    
-            T = 100, 
+            T = 300, 
             dur_infectious = 13, ## duration of infectiousness (days)
             dur_latent = 7,      ## duration of latent period (days)
             mort = 0.68,         ## proportion dying  
             R0intra = 5,       ## intra-patch R0
-            vacc_rate = c(0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.01))   ## vaccination rate
+            vacc_rate = c(0.0, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0))   ## vaccination rate
 
 par$R0mat <- matrix(c(par$R0intra, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
                       0.5, par$R0intra, 0.5, 0.5, 0.5, 0.5, 0.5, 
                       0.5, 0.5, par$R0intra, 0.5, 0.5, 0.5, 0.5,
                       0.5, 0.5, 0.5, par$R0intra, 0.5, 0.5, 0.5, 
                       0.5, 0.5, 0.5, 0.5, par$R0intra, 0.5, 0.5,
-                      0.5, 0.5, 0.5, 0.5, 0.5, par$R0intra, 0.5,
+                      0.5, 0.8, 0.5, 0.5, 0.5, par$R0intra, 0.5,
                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5, par$R0intra),
                     nrow = par$n_patches, 
                     ncol = par$n_patches, byrow = T)
@@ -26,4 +26,4 @@ par$R0mat <- matrix(c(par$R0intra, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
 states = list(N0=  c(2, 6, 4, 1, 10, 5, 3), 
               I0 = c(0, 0, 0, 0, 1,  0, 0), 
               E0= c(0, 0, 0, 0, 1,  0, 0),
-              V0= c(0, 3, 0, 0, 0, 0, 1))
+              V0= c(2, 6, 0, 0, 0, 0, 0))

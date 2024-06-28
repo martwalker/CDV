@@ -35,7 +35,7 @@ funcs <- list(
     beta <- par$R0mat*(gamma+mu)
     
     # rate of losing immunity
-    delta <- 1/18  # immunity lasts for 18 months
+    delta <- 1/547  # immunity lasts for 18 months
     
     
     # initialise storage matrices 
@@ -162,11 +162,11 @@ funcs <- list(
       ## updates states
       #######################
       
-      S <- S - new_infection - new_vaccinated
+      S <- S - new_infection - new_vaccinated + new_lost_immunity
       E <- E + new_infection - new_progression
       I <- I + new_progression - new_recovered - new_dead
       R <- R + new_recovered
-      V <- V + new_vaccinated
+      V <- V + new_vaccinated - new_lost_immunity
       N <- S + E + I + R + V
       #N <- sum (S,E,I,R,V,na.rm=TRUE)
     }
