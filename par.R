@@ -24,13 +24,6 @@ par$R0mat <- matrix(c( par$R0intra, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
 df <- read.csv("data.csv")
 
 #####################################
-## mortality rates
-####################################
-n0 <- df$total[df$time==0]
-n1 <- df$total[df$time==183]
-n2 <- df$total[df$time==366]
-
-#####################################
 ## states
 ####################################
 states = list(N0 = df$total[df$time==0], 
