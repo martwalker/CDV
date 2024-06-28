@@ -34,6 +34,9 @@ funcs <- list(
     #  contact matrix
     beta <- par$R0mat*(gamma+mu)
     
+    # rate of losing immunity
+    delta <- 1/18  # immunity lasts for 18 months
+    
     
     # initialise storage matrices 
     
@@ -50,7 +53,7 @@ funcs <- list(
       V_series[t, ] <- V
       N_series[t, ] <- S + E + I + R + V
       
-      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- new_progression <- new_loss <- new_recovered <- new_dead <- new_vaccinated <- rep(0, par$n_patches)
+      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- new_progression <- new_loss <- new_recovered <- new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
       
       for (patch in 1:par$n_patches) {
         
@@ -100,9 +103,13 @@ funcs <- list(
           
           p_vaccination <- 1 - exp(-par$vacc_rate)
           
+          # losing immunity event
+          
+          p_lost_immunity <- 1 - exp(-delta)
+          
         } else {
           
-          p_infection <- p_progression <- p_endogenous_infection <- p_exogenous_infection <-  p_loss <- p_recovery <-  p_death <- p_vaccination <- 0
+          p_infection <- p_progression <- p_endogenous_infection <- p_exogenous_infection <-  p_loss <- p_recovery <-  p_death <- p_vaccination <- p_lost_immunity <- 0
           
         }
         
@@ -137,10 +144,16 @@ funcs <- list(
           new_loss[patch] <- new_recovered[patch] <- new_dead[patch] <- 0
         }
         
-        if (p_vaccination > 0) {
+        if (all(p_vaccination > 0)) {
           new_vaccinated[patch] <- rbinom(1, S[patch], p_vaccination)
         } else {
           new_vaccinated[patch] <- 0
+        }
+        
+        if (p_lost_immunity > 0) {
+          new_lost_immunity[patch] <- rbinom(1,V[patch], p_lost_immunity)
+        } else {
+          new_lost_immunity[patch] <- 0
         }
         
       }
@@ -155,10 +168,11 @@ funcs <- list(
       R <- R + new_recovered
       V <- V + new_vaccinated
       N <- S + E + I + R + V
+      #N <- sum (S,E,I,R,V,na.rm=TRUE)
     }
     
     #######################
-    ## outpur time series
+    ## output time series
     #######################
     
     
