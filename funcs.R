@@ -11,14 +11,20 @@ funcs <- list(
     #######################
     # initialise and populate compartments
     #######################
-    S <- E <- I <- R <- V <- N <- Ex <- vector("integer", length=par$n_patches)
+    S <- E <- I <- R <- V <- N <- Ex <- E0 <- vector("integer", length=par$n_patches)
+    
+    ##############################
+    # randomly set one patch to have an exposed
+    ############################
+    
+    E0[sample(seq(1,par$n_patches))[1]] <- 1
     
     for (i in 1:par$n_patches) {
-      S[i] <- (states$N0[i] - states$E0[i])*(1-par$vacc[i])
-      E[i] <- states$E0[i]
+      S[i] <- (states$N0[i] - E0[i])*(1-par$vacc[i])
+      E[i] <- E0[i]
       I[i] <- 0
       R[i] <- 0
-      V[i] <- (states$N0[i] - states$E0[i])*par$vacc[i]
+      V[i] <- (states$N0[i] - E0[i])*par$vacc[i]
       N[i] <- S[i] + E[i] + I[i] + R[i] + V[i]
       Ex[i] <- N[i]==0
     }
@@ -34,6 +40,7 @@ funcs <- list(
     
     #  contact matrix
    ## beta <- par$R0mat*(gamma+mu)
+    beta <- par$beta
     
     # rate of losing immunity
     delta <- 1/par$dur_immun
