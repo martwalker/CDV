@@ -4,8 +4,8 @@
 funcs <- list(
   
   #######################
-  # stochastic SEIRV model simulation 
-  #######################   
+  # stochastic SEIRV model simulation
+  #######################
   SEIRV = function(states, par) {
     
     #######################
@@ -26,25 +26,25 @@ funcs <- list(
     # recovery rate
     gamma <- 1/par$dur_infectious
     
-    # proggression rate 
+    # proggression rate
     sigma <- 1/par$dur_latent
     
     # mortality rate
     mu <- par$mort*gamma/(1-par$mort)
     
     #  contact matrix
-    beta <- par$R0mat*(gamma+mu)
+   ## beta <- par$R0mat*(gamma+mu)
     
     # rate of losing immunity
     delta <- 1/par$dur_immun
     
-    # initialise storage matrices 
+    # initialise storage matrices
     S_series <- E_series <- I_series <-
-      R_series <- V_series <- N_series <- Ex_series <- matrix(0, nrow = par$T, ncol = par$n_patches)    
+      R_series <- V_series <- N_series <- Ex_series <- matrix(0, nrow = par$T, ncol = par$n_patches)
     
     #######################
     # main time loop
-    #######################     
+    #######################
     for (t in 1:par$T) {
       S_series[t, ] <- S
       E_series[t, ] <- E
@@ -54,9 +54,8 @@ funcs <- list(
       N_series[t, ] <- S + E + I + R + V
       Ex_series[t, ] <- Ex
       
-      new_infection <- new_endogenous_infection <-  new_exogenous_infection <- 
-        new_progression <- new_loss <- new_recovered <-
-          new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
+      new_infection <- new_endogenous_infection <-  new_exogenous_infection <-
+        new_progression <- new_loss <- new_recovered <- new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
       
       for (patch in 1:par$n_patches) {
         
@@ -78,7 +77,7 @@ funcs <- list(
           
           # exogenous infection event
           p_exogenous_infection <- 1 - exp(-(
-            (sum(beta[patch,-patch]*I[-patch] / N[-patch])) 
+            (sum(beta[patch,-patch]*I[-patch] / N[-patch]))
           ))
           
           # progression from exposed to infectious
@@ -88,7 +87,7 @@ funcs <- list(
           
           # any loss event (recovery or death)
           p_loss <- 1 - exp(-(
-            gamma +                                            # recovery 
+            gamma +                                            # recovery
               mu                                               # death
           ))
           
@@ -109,8 +108,8 @@ funcs <- list(
           
         } else {
           
-          p_infection <- p_progression <- p_endogenous_infection <- p_exogenous_infection <-  p_loss <- p_recovery <-  p_death <- p_vaccination <- p_lost_immunity <- 0
-          
+          p_infection <- p_progression <- p_endogenous_infection <- p_exogenous_infection <- p_recovery <-  p_death <- p_vaccination <- p_lost_immunity <- 0
+          p_loss <- c(0, 0, 0, 0, 0, 0, 0)
         }
         
         #######################
@@ -133,12 +132,12 @@ funcs <- list(
           new_progression[patch] <- rbinom(1, E[patch], p_progression)
         }
         
-        if (p_loss>0) {
+        if (p_loss[patch]>0) {
           # new loss (recovery or death)
-          new_loss[patch] <- rbinom(1, I[patch], p_loss)
+          new_loss[patch] <- rbinom(1, I[patch], p_loss[patch])
           # new recovery
-          new_recovered[patch] <- rbinom(1, new_loss[patch], p_recovery/p_loss)
-          # new death 
+          new_recovered[patch] <- rbinom(1, new_loss[patch], p_recovery/p_loss[patch])
+          # new death
           new_dead[patch] <- new_loss[patch] - new_recovered[patch]
         } else {
           new_loss[patch] <- new_recovered[patch] <- new_dead[patch] <- 0
@@ -172,7 +171,7 @@ funcs <- list(
     
     list(S=S_series,E=E_series, I=I_series, R=R_series, V=V_series, N=N_series, Ex=Ex_series)
     
-  }, 
+  },
   
   runSEIRV = function(repeats, states, par) {
     

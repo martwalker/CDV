@@ -1,4 +1,5 @@
-################################################## 
+
+##################################################
 ## Stochastic SEIRV metapopulation model simulation
 #################################################
 
@@ -39,9 +40,6 @@ plot_results <- function(out) {
   plot_extinction <- ggplot(out$Ex, aes(x = time, y = mean, color = patch)) +
     geom_line() +
     labs(y = "Probability extinction")
-  
-
-  
   # Arrange plots in a grid
   grid.arrange(
     plot_susceptible, plot_exposed, plot_infected,
