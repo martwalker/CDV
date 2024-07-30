@@ -13,6 +13,9 @@ funcs <- list(
     #######################
     S <- E <- I <- R <- V <- N <- Ex <- E0 <- vector("integer", length=par$n_patches)
     
+    # total number going extinct
+    NEx <- vector("integer", length=1)
+    
     ##############################
     # randomly set one patch to have an exposed
     ############################
@@ -28,6 +31,8 @@ funcs <- list(
       N[i] <- S[i] + E[i] + I[i] + R[i] + V[i]
       Ex[i] <- N[i]==0
     }
+    
+    NEx <- sum(Ex)
     
     # recovery rate
     gamma <- 1/par$dur_infectious
@@ -49,6 +54,9 @@ funcs <- list(
     S_series <- E_series <- I_series <-
       R_series <- V_series <- N_series <- Ex_series <- matrix(0, nrow = par$T, ncol = par$n_patches)
     
+    # initialise vector for number of patches goinf extinct
+    NEx_series <- vector("integer", length=par$T)
+    
     #######################
     # main time loop
     #######################
@@ -60,6 +68,8 @@ funcs <- list(
       V_series[t, ] <- V
       N_series[t, ] <- S + E + I + R + V
       Ex_series[t, ] <- Ex
+      
+      NEx_series[t] <- NEx
       
       new_infection <- new_endogenous_infection <-  new_exogenous_infection <-
         new_progression <- new_loss <- new_recovered <- new_dead <- new_vaccinated <- new_lost_immunity <- rep(0, par$n_patches)
@@ -169,6 +179,7 @@ funcs <- list(
       V <- V + new_vaccinated - new_lost_immunity
       N <- S + E + I + R + V
       Ex <- N==0
+      NEx <- sum(Ex)
     }
     
     #######################
@@ -176,7 +187,7 @@ funcs <- list(
     #######################
     
     
-    list(S=S_series,E=E_series, I=I_series, R=R_series, V=V_series, N=N_series, Ex=Ex_series)
+    list(S=S_series,E=E_series, I=I_series, R=R_series, V=V_series, N=N_series, Ex=Ex_series, NEx=NEx_series)
     
   },
   
@@ -192,6 +203,7 @@ funcs <- list(
     N <- as.data.frame(cbind(do.call(rbind, multi["N", 1:repeats]), time = seq(1, par$T)))
     Ex <- as.data.frame(cbind(do.call(rbind, multi["Ex", 1:repeats]), time = seq(1, par$T)))
     
+    NEx <- as.data.frame(cbind( do.call(c, multi["NEx", 1:repeats]), time = seq(1, par$T)))
     
     S_df <- as.data.frame(S) %>% pivot_longer(-time, names_to = "patch", values_to = "S")
     E_df <- as.data.frame(E) %>% pivot_longer(-time, names_to = "patch", values_to = "E")
@@ -200,6 +212,8 @@ funcs <- list(
     V_df <- as.data.frame(V) %>% pivot_longer(-time, names_to = "patch", values_to = "V")
     N_df <- as.data.frame(N) %>% pivot_longer(-time, names_to = "patch", values_to = "N")
     Ex_df <- as.data.frame(Ex) %>% pivot_longer(-time, names_to = "patch", values_to = "Ex")
+    
+    NEx_df <- as.data.frame(NEx) %>% pivot_longer(-time, names_to = "patch", values_to = "NEx")
     
     
     S_out <- group_by(S_df, patch, time) %>% summarise(mean = mean(S), lwr = quantile(S, probs = 0.025, na.rm=TRUE), upr = quantile(S, probs = 0.975, na.rm=TRUE))
@@ -210,7 +224,9 @@ funcs <- list(
     N_out <- group_by(N_df, patch, time) %>% summarise(mean = mean(N), lwr = quantile(N, probs = 0.025, na.rm=TRUE), upr = quantile(N, probs = 0.975, na.rm=TRUE))
     Ex_out <- group_by(Ex_df, patch, time) %>% summarise(mean = mean(Ex), lwr = quantile(Ex, probs = 0.025, na.rm=TRUE), upr = quantile(Ex, probs = 0.975, na.rm=TRUE))
     
+    NEx_out <- group_by(NEx_df, patch, time) %>% summarise(mean = mean(NEx), lwr = quantile(NEx, probs = 0.025, na.rm=TRUE), upr = quantile(NEx, probs = 0.975, na.rm=TRUE))
     
-    return(list(S = S_out, E = E_out, I = I_out,R = R_out, V = V_out, N = N_out, Ex=Ex_out))
+    
+    return(list(S = S_out, E = E_out, I = I_out,R = R_out, V = V_out, N = N_out, Ex=Ex_out, NEx=NEx_out))
   }
 )

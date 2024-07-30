@@ -53,3 +53,12 @@ out <- funcs$runSEIRV(repeats = 100, states = states, par = par)
 
 plot_results(out)
 
+## Plot number patches going extict
+ggplot(out$NEx, aes(x=time, y=mean)) + 
+  geom_line() +
+  labs(y = "Number extinct")
+
+out$Ex[,"mean"][out$Ex[,"time"]==par$T]
+
+out$NEx[,"mean"][out$NEx[,"time"]==par$T]
+
