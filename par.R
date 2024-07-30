@@ -7,8 +7,9 @@ par <- list(n_patches = 7,
             dur_latent = 7,      ## duration of latent period (days)
             dur_immun = 1000,     ## duration of immunity (days)
             mort = c(0.68, 0.68, 0.68, 0.68, 0.85, 0.68, 0.68),         ## proportion dying  
-            beta_intra = 0.4,       ## intra-patch R0
-            vacc = c(0, 0, 0, 0, 0, 0, 0))   ## indicator for whether a pack is vaccinated
+            beta_intra = 0.6,       ## intra-patch R0
+            vacc = c(0, 0, 0, 0, 0, 0, 0),  ## indicator for whether a pack is vaccinated
+            repeats = 250)  
 
 par$beta <- matrix(c(par$beta_intra, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05,
                       0.05, par$beta_intra, 0.05, 0.05, 0.05, 0.05, 0.05, 
