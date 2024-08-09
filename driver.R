@@ -19,27 +19,34 @@ source("funcs.R")
 plot_results <- function(out) {
   plot_susceptible <- ggplot(out$S, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Susceptible")
+    labs(y = "Susceptible") +
+    labs(color="Pack")
   
   plot_exposed <- ggplot(out$E, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Exposed")
+    labs(y = "Exposed") +
+    labs(color="Pack")
   
   plot_infected <- ggplot(out$I, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Infected")
+    labs(y = "Infected") +
+    labs(color="Pack")
   
   plot_recovered <- ggplot(out$R, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Recovered")
+    labs(y = "Recovered") +
+    labs(color="Pack")
   
   plot_population <- ggplot(out$N, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Population")
+    labs(y = "Population") +
+    labs(color="Pack")
   
   plot_extinction <- ggplot(out$Ex, aes(x = time, y = mean, color = patch)) +
     geom_line() +
-    labs(y = "Probability extinction")
+    labs(y = "Probability extinction")+
+    labs(color="Pack")
+  
   # Arrange plots in a grid
   grid.arrange(
     plot_susceptible, plot_exposed, plot_infected,

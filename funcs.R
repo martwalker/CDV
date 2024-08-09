@@ -41,7 +41,14 @@ funcs <- list(
     sigma <- 1/par$dur_latent
     
     # mortality rate
-    mu <- par$mort*gamma/(1-par$mort)
+    
+    ## mortality 'rates' are actuall probabilities 
+    ## so rate is probability/duration of infectious period
+    mu <- -log(1-par$mort)/par$dur_infectious
+    
+    #mu <- mu*gamma/(1-par$mort)
+    
+   # mu <- mort_rate*gamma/(1-mort_rate)
     
     #  contact matrix
    ## beta <- par$R0mat*(gamma+mu)
